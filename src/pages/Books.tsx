@@ -55,14 +55,14 @@ const BookTable: React.FC = () => {
                         <td>
                             <button
                                 className="btn btn-primary"
+                                disabled={!username || !password}
+                                title={!username || !password ? 'Please log in to add to cart' : ''}
                                 onClick={() => {
+                                    if (!username || !password) return;
                                     fetch(`http://localhost:8080/cart/add?bookCode=${encodeURIComponent(book.code)}&quantity=1`, {
                                         method: 'POST',
                                         credentials: 'include',
-                                        headers: {
-                                            ...getAuthHeader(),
-                                            'Content-Type': 'application/json'
-                                        }
+                                        headers: getAuthHeader()
                                     })
                                         .then(res => res.json())
                                         .then(() => {

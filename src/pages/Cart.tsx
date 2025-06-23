@@ -19,17 +19,20 @@ const CartPage: React.FC = () => {
     const [quantities, setQuantities] = useState<{ [id: number]: number }>({});
     const { username, password } = useAuth();
 
-    const getAuthHeader = () => {
+    const getAuthHeader = (): HeadersInit => {
         if (!username || !password) return {};
         const token = btoa(`${username}:${password}`);
         return { 'Authorization': `Basic ${token}` };
     };
 
     useEffect(() => {
+        if (!username || !password) {
+            setLoading(false);
+            setCart([]);
+            return;
+        }
         fetch('http://localhost:8080/cart', {
-            headers: {
-                ...getAuthHeader()
-            },
+            headers: getAuthHeader(),
             credentials: 'include',
         })
             .then(res => res.json())
@@ -40,23 +43,21 @@ const CartPage: React.FC = () => {
     }, [username, password]);
 
     const handleRemove = (bookCode: string) => {
+        if (!username || !password) return;
         fetch(`http://localhost:8080/cart/remove/${encodeURIComponent(bookCode)}`, {
             method: 'DELETE',
             credentials: 'include',
-            headers: {
-                ...getAuthHeader()
-            }
+            headers: getAuthHeader()
         })
             .then(() => setCart(cart.filter(item => item.book.code !== bookCode)));
     };
 
     const handleClearCart = () => {
+        if (!username || !password) return;
         fetch('http://localhost:8080/cart', {
             method: 'DELETE',
             credentials: 'include',
-            headers: {
-                ...getAuthHeader()
-            }
+            headers: getAuthHeader()
         })
             .then(() => setCart([]));
     };
@@ -71,14 +72,13 @@ const CartPage: React.FC = () => {
     };
 
     const handleQuantityBlur = (item: CartItem) => {
+        if (!username || !password) return;
         const newQuantity = quantities[item.id];
         if (newQuantity !== item.quantity && newQuantity > 0) {
             fetch(`http://localhost:8080/cart?bookCode=${encodeURIComponent(item.book.code)}&quantity=${newQuantity}`, {
                 method: 'PUT',
                 credentials: 'include',
-                headers: {
-                    ...getAuthHeader()
-                }
+                headers: getAuthHeader()
             })
                 .then(res => res.json())
                 .then(updated => {
@@ -93,6 +93,23 @@ const CartPage: React.FC = () => {
                 <div className="spinner-border text-primary" role="status">
                     <span className="sr-only">Loading...</span>
                 </div>
+            </div>
+        );
+    }
+
+    // Show login warning if not logged in
+    if (!username || !password) {
+        return (
+            <div className="container mt-5">
+                <div className="alert alert-warning text-center">
+                    Please <Link to="/login">log in</Link> to view your cart.
+                </div>
+                <Link to="/books">Go to Books</Link>
+                <hr/>
+                <Link to="/register">Register</Link>
+                <hr/>
+                <Link to="/login">Login</Link>
+                <hr/>
             </div>
         );
     }
