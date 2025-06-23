@@ -12,16 +12,27 @@ function Register() {
         params.append("username", username);
         params.append("password", password);
 
-        const response = await fetch("http://localhost:8080/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: params.toString(),
-        });
+        try {
+            const response = await fetch("http://localhost:8080/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: params.toString(),
+            });
 
-        const text = await response.text();
-        setMessage(text);
+            if (!response.ok) {
+                const errorMsg = await response.text();
+                setMessage(`Registration failed: ${errorMsg}`);
+            } else {
+                const text = await response.text();
+                setMessage(text);
+            }
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            setMessage(`An error occurred: ${error.message || error}`);
+        }
     };
 
     return (
