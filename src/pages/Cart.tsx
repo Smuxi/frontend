@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useAuth } from '../AuthContext';
 
 type CartItem = {
     id: number;
     book: {
+        code: string;
         title: string;
         price: number;
     };
@@ -15,26 +17,47 @@ const CartPage: React.FC = () => {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [quantities, setQuantities] = useState<{ [id: number]: number }>({});
+    const { username, password } = useAuth();
+
+    const getAuthHeader = () => {
+        if (!username || !password) return {};
+        const token = btoa(`${username}:${password}`);
+        return { 'Authorization': `Basic ${token}` };
+    };
 
     useEffect(() => {
-        fetch('http://localhost:8080/cart')
+        fetch('http://localhost:8080/cart', {
+            headers: {
+                ...getAuthHeader()
+            },
+            credentials: 'include',
+        })
             .then(res => res.json())
             .then(data => {
                 setCart(Array.isArray(data) ? data : []);
                 setLoading(false);
             });
-    }, []);
+    }, [username, password]);
 
     const handleRemove = (bookCode: string) => {
         fetch(`http://localhost:8080/cart/remove/${encodeURIComponent(bookCode)}`, {
             method: 'DELETE',
             credentials: 'include',
+            headers: {
+                ...getAuthHeader()
+            }
         })
             .then(() => setCart(cart.filter(item => item.book.code !== bookCode)));
     };
 
     const handleClearCart = () => {
-        fetch('http://localhost:8080/cart', { method: 'DELETE' })
+        fetch('http://localhost:8080/cart', {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                ...getAuthHeader()
+            }
+        })
             .then(() => setCart([]));
     };
 
@@ -53,6 +76,9 @@ const CartPage: React.FC = () => {
             fetch(`http://localhost:8080/cart?bookCode=${encodeURIComponent(item.book.code)}&quantity=${newQuantity}`, {
                 method: 'PUT',
                 credentials: 'include',
+                headers: {
+                    ...getAuthHeader()
+                }
             })
                 .then(res => res.json())
                 .then(updated => {

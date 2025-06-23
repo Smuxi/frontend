@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useAuth } from '../AuthContext';
 
 type Book = {
     code: string;
@@ -11,12 +12,19 @@ type Book = {
 
 const BookTable: React.FC = () => {
     const [books, setBooks] = useState<Book[]>([]);
+    const { username, password } = useAuth();
 
     useEffect(() => {
         fetch('http://localhost:8080/books')
             .then(res => res.json())
             .then(data => setBooks(data));
     }, []);
+
+    const getAuthHeader = () => {
+        if (!username || !password) return {};
+        const token = btoa(`${username}:${password}`);
+        return { 'Authorization': `Basic ${token}` };
+    };
 
     return (
         <div>
@@ -50,16 +58,20 @@ const BookTable: React.FC = () => {
                                 onClick={() => {
                                     fetch(`http://localhost:8080/cart/add?bookCode=${encodeURIComponent(book.code)}&quantity=1`, {
                                         method: 'POST',
-                                        credentials: 'include', // if using cookies/session
+                                        credentials: 'include',
+                                        headers: {
+                                            ...getAuthHeader(),
+                                            'Content-Type': 'application/json'
+                                        }
                                     })
                                         .then(res => res.json())
-                                        .then(data => {
+                                        .then(() => {
                                             alert('Book added to cart');
                                         })
                                         .catch(() => alert('Failed to add book to cart'));
                                 }}
                             >
-                                Add to Cart
+                                Add to Cart{username ? ` as ${username}` : ''}
                             </button>
                         </td>
                     </tr>
