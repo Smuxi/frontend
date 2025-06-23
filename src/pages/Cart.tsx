@@ -76,6 +76,11 @@ const CartPage: React.FC = () => {
             <div className="container mt-5">
                 <div className="alert alert-info text-center">Your cart is empty.</div>
                 <Link to="/books">Go to Books</Link>
+                <hr/>
+                <Link to="/register">Register</Link>
+                <hr/>
+                <Link to="/login">Login</Link>
+                <hr/>
             </div>
         );
     }
