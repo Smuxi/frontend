@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { Link } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 const Login: React.FC = () => {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    const [usernameInput, setUsernameInput] = useState("");
+    const [passwordInput, setPasswordInput] = useState("");
     const [message, setMessage] = useState("");
+    const { setUsername, setPassword } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const params = new URLSearchParams();
-        params.append("username", username);
-        params.append("password", password);
+        params.append("username", usernameInput);
+        params.append("password", passwordInput);
 
         try {
             const response = await fetch("http://localhost:8080/login", {
@@ -22,12 +24,13 @@ const Login: React.FC = () => {
             });
 
             if (!response.ok) {
-                // Try to parse error message from response
                 const errorMsg = await response.text();
                 setMessage(`Login failed: ${errorMsg}`);
             } else {
                 const text = await response.text();
                 setMessage(text);
+                setUsername(usernameInput);
+                setPassword(passwordInput);
             }
         } catch (error: any) {
             setMessage(`An error occurred: ${error.message || error}`);
@@ -41,15 +44,15 @@ const Login: React.FC = () => {
                 <input
                     type="text"
                     placeholder="Username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    value={usernameInput}
+                    onChange={e => setUsernameInput(e.target.value)}
                     required
                 />
                 <input
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    value={passwordInput}
+                    onChange={e => setPasswordInput(e.target.value)}
                     required
                 />
                 <button type="submit">Login</button>
